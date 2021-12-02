@@ -3,7 +3,6 @@ using AdventOfCode.Parsing;
 using AdventOfCode.Utils;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace Day_02 {
@@ -20,17 +19,36 @@ namespace Day_02 {
         }
 
         protected override object SolvePart1(IEnumerable<SubInstruction> input) {
-            Point position = new();
+            Submarine position = new();
 
             foreach(SubInstruction instruction in input) {
-                position += instruction;
+                if (instruction.Direction == SubDirection.forward) {
+                    position.Horizontal += instruction.Units;
+                } else if (instruction.Direction == SubDirection.up) {
+                    position.Depth -= instruction.Units;
+                } else if (instruction.Direction == SubDirection.down) {
+                    position.Depth += instruction.Units;
+                }
             }
 
-            return position.X * position.Y;
+            return position.Horizontal * position.Depth;
         }
 
         protected override object SolvePart2(IEnumerable<SubInstruction> input) {
-            return null;
+            Submarine position = new();
+
+            foreach (SubInstruction instruction in input) {
+                if (instruction.Direction == SubDirection.up) {
+                    position.Aim -= instruction.Units;
+                } else if (instruction.Direction == SubDirection.down) {
+                    position.Aim += instruction.Units;
+                } else if (instruction.Direction == SubDirection.forward) {
+                    position.Horizontal += instruction.Units;
+                    position.Depth += position.Aim * instruction.Units;
+                }
+            }
+
+            return position.Horizontal * position.Depth;
         }
 
     }
