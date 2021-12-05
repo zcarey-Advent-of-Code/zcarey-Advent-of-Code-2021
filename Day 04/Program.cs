@@ -57,6 +57,29 @@ namespace Day_04 {
         }
 
         protected override object SolvePart2(Tuple<int[], BingoCard[]> input) {
+            List<BingoCard> cards = new(input.Item2);
+            List<BingoCard> winningCards = new List<BingoCard>();
+
+            foreach(int bingoNumber in input.Item1) {
+                // Find winning cards for this number
+                foreach(BingoCard card in cards) {
+                    if(card.CheckForWin(bingoNumber)) {
+                        winningCards.Add(card);
+
+                        // Check if we found the answer
+                        if (cards.Count == 1) {
+                            return bingoNumber * card.UnmarkedNumbers().Sum();
+                        }
+                    }
+                }
+
+                // Remove any winning cards from our list
+                foreach(BingoCard card in winningCards) {
+                    cards.Remove(card);
+                }
+                winningCards.Clear();
+            }
+
             return null;
         }
 
