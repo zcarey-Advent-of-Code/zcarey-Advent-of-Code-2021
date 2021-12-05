@@ -12,8 +12,10 @@ namespace AdventOfCode.Parsing {
 			List<string> group = new List<string>();
 			foreach (string line in input) {
 				if (string.IsNullOrWhiteSpace(line)) {
-					yield return group.ToArray();
-					group.Clear();
+					if(group.Count > 0) {
+						yield return group.ToArray();
+						group.Clear();
+					}
 				} else {
 					group.Add(line);
 				}
