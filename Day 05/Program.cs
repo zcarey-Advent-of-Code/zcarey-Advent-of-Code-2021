@@ -29,7 +29,8 @@ namespace Day_05 {
         }
 
         protected override object SolvePart2(Grid input) {
-            return null;
+            input.AddDiagonals();
+            return input.Intersections.Where(x => x.Value >= 2).Count();
         }
 
     }

@@ -12,29 +12,31 @@ namespace Day_05 {
 
         public Line[] Lines = new Line[] { };
         public Dictionary<Point, int> Intersections = new();
-        public int Left = int.MaxValue;
-        public int Right = int.MinValue;
-        public int Top = int.MinValue;
-        public int Bottom = int.MaxValue;
-        public Rectangle Area {
-            get {
-                return new Rectangle(Left, Top, Right - Left, Bottom - Top);
-            }
-        }
+        public List<Line> DiagonalLines = new();
 
         public void Parse(IEnumerable<Line> input) {
             this.Lines = input.ToArray();
 
             foreach (Line line in this.Lines) {
+                if(line.Type == LineType.Diagonal) {
+                    DiagonalLines.Add(line);
+                }
                 foreach (Point point in line.GetPoints()) {
                     if (!Intersections.ContainsKey(point)) {
                         Intersections[point] = 0;
                     }
                     Intersections[point]++;
-                    Left = Math.Min(Left, point.X);
-                    Right = Math.Max(Right, point.X);
-                    Top = Math.Min(Top, point.Y);
-                    Bottom = Math.Max(Bottom, point.Y);
+                }
+            }
+        }
+
+        public void AddDiagonals() {
+            foreach(Line line in DiagonalLines) {
+                foreach (Point point in line.GetPoints(true)) {
+                    if (!Intersections.ContainsKey(point)) {
+                        Intersections[point] = 0;
+                    }
+                    Intersections[point]++;
                 }
             }
         }

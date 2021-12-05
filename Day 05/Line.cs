@@ -26,8 +26,8 @@ namespace Day_05 {
             }
         }
 
-        public IEnumerable<Point> GetPoints() {
-            if (Type == LineType.Diagonal) {
+        public IEnumerable<Point> GetPoints(bool IncludeDiagonal = false) {
+            if (Type == LineType.Diagonal && !IncludeDiagonal) {
                 yield break; // Part 1 only do horizontal or vertical lines
             }
 
