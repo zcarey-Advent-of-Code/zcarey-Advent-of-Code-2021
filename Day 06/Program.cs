@@ -20,8 +20,16 @@ namespace Day_06 {
         }
 
         protected override object SolvePart1(IEnumerable<int> input) {
-            Dictionary<int, int> fishes = new();
-            Dictionary<int, int> nextDay = new();
+            return FishySimulator(input, 80);
+        }
+
+        protected override object SolvePart2(IEnumerable<int> input) {
+            return FishySimulator(input, 256);
+        }
+
+        private long FishySimulator(IEnumerable<int> input, int days) {
+            Dictionary<int, long> fishes = new();
+            Dictionary<int, long> nextDay = new();
             foreach (int fish in input) {
                 if (fishes.ContainsKey(fish)) {
                     fishes[fish]++;
@@ -32,12 +40,12 @@ namespace Day_06 {
 
             int spawnTime = 7;
             int matureTime = 2;
-            for (int day = 0; day < 80; day++) {
-                foreach(KeyValuePair<int, int> fish  in fishes) {
+            for (int day = 0; day < days; day++) {
+                foreach (KeyValuePair<int, long> fish in fishes) {
                     int fishClock = fish.Key;
-                    int fishCount = fish.Value;
+                    long fishCount = fish.Value;
 
-                    if(fishClock == 0) {
+                    if (fishClock == 0) {
                         // Subtract 1 from clocks to account of "off-by-one" error
                         fishClock = spawnTime - 1;
                         nextDay[spawnTime + matureTime - 1] = fishCount;
@@ -58,10 +66,6 @@ namespace Day_06 {
             }
 
             return fishes.Select(x => x.Value).Sum();
-        }
-
-        protected override object SolvePart2(IEnumerable<int> input) {
-            return null;
         }
 
     }
