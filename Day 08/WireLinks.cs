@@ -35,6 +35,9 @@ namespace Day_08 {
 
             WireLinks links = new();
 
+            // Possible links for the wires (i.e. a could be segment a, b, c, etc).
+            // When there is only 1 character left in the list, then we would know the wire (key) should be linked to that segment (value)
+            // We really only need this to find segment 'a' (using digit 7 and 1) then find the wire pairs.
             Dictionary<char, List<char>> possibleLinks = new() {
                 { 'a', new() { 'a', 'b', 'c', 'd', 'e', 'f', 'g' } },
                 { 'b', new() { 'a', 'b', 'c', 'd', 'e', 'f', 'g' } },
@@ -60,9 +63,10 @@ namespace Day_08 {
                 throw new Exception("Unable to find all the easy numbers");
 
             // Seven is special, we can identify it because it shares all but 1 segment with the digit 1
+            // This will find us segment 'a'
             foreach(char c in knownNumbers[7]) {
                 if (!knownNumbers[1].Contains(c)) {
-                    CompleteLink(possibleLinks, c, 'a');
+                    CompleteLink(possibleLinks, c, 'a'); // I literally made a function just to remove 'a' from all other links lol
                     possibleLinks.Remove(c);
                     links.Linker[c] = 'a';
                     break;
@@ -70,115 +74,94 @@ namespace Day_08 {
             }
 
 
-            // Find wire pairs
-            List<KeyValuePair<char, List<char>>> pairCF = new();
-            List<KeyValuePair<char, List<char>>> pairBD = new();
-            List<KeyValuePair<char, List<char>>> pairEG = new();
+            // At this point, we should know segment 'a' and have 3 "pairs" of wires.
+            // A "pair" of wires is two wires that have exactly 2 possible segments, and the 2 wires share the same 2 possible segments
+            // Pair CF: Two wires that could be either 'c' or 'f'
+            // Pair BD: Two wires that could be either 'b' or 'd'
+            // Pair EG: Two wires that could be either 'e' or 'g'
 
-            bool pairFound = true;
-            while (pairFound) {
-                pairFound = false;
+            // Find wire pairs. Store in list for convenience
+            List<char> allSegments = new() { 'c', 'f', 'b', 'd', 'e', 'g' };
+            List<char> pairCF = null;
+            List<char> pairBD = null;
+            List<char> pairEG = null;
 
-                List<char> removeLinks = new();
-                foreach (var pair in possibleLinks) {
-                    if (pair.Value.Count == 2) {
-                        if (pair.Value[0] == 'c' || pair.Value[0] == 'f') {
-                            pairCF.Add(pair);
-                            removeLinks.Add(pair.Key);
-                            pairFound = true;
-                        } else if (pair.Value[0] == 'b' || pair.Value[0] == 'd') {
-                            pairBD.Add(pair);
-                            removeLinks.Add(pair.Key);
-                            pairFound = true;
-                        } else if (pair.Value[0] == 'e' || pair.Value[0] == 'g') {
-                            pairEG.Add(pair);
-                            removeLinks.Add(pair.Key);
-                            pairFound = true;
-                        }
+            bool changes = true;
+            List<char> removeLinks = new();
+            while (changes) {
+                changes = false;
+                List<char> pair;
+                foreach (var kvPair in possibleLinks) {
+                    kvPair.Value.RemoveAll(removeLinks.Contains);
+                }
+                removeLinks.Clear();
+
+                if (pairCF == null) {
+                    pair = FindPair(possibleLinks, 'c', 'f');
+                    if(pair.Count == 2) {
+                        pairCF = pair;
+                        possibleLinks.Remove(pair[0]);
+                        possibleLinks.Remove(pair[1]);
+                        removeLinks.Add('c');
+                        removeLinks.Add('f');
+                        changes = true;
+                        continue;
                     }
                 }
-                foreach (char key in removeLinks) {
-                    possibleLinks.Remove(key);
+
+                if (pairBD == null) {
+                    pair = FindPair(possibleLinks, 'b', 'd');
+                    if (pair.Count == 2) {
+                        pairBD = pair;
+                        possibleLinks.Remove(pair[0]);
+                        possibleLinks.Remove(pair[1]);
+                        removeLinks.Add('b');
+                        removeLinks.Add('d');
+                        changes = true;
+                        continue;
+                    }
                 }
 
-                // remove characters for known links
-                foreach (var pair in possibleLinks) {
-                    if (pairCF.Count == 2) {
-                        pair.Value.Remove('c');
-                        pair.Value.Remove('f');
-                    }
-                    if (pairBD.Count == 2) {
-                        pair.Value.Remove('b');
-                        pair.Value.Remove('d');
-                    }
-                    if (pairEG.Count == 2) {
-                        pair.Value.Remove('e');
-                        pair.Value.Remove('g');
+                if (pairEG == null) {
+                    pair = FindPair(possibleLinks, 'e', 'g');
+                    if (pair.Count == 2) {
+                        pairEG = pair;
+                        possibleLinks.Remove(pair[0]);
+                        possibleLinks.Remove(pair[1]);
+                        removeLinks.Add('e');
+                        removeLinks.Add('g');
+                        changes = true;
+                        continue;
                     }
                 }
+
             }
-            if (pairCF.Count != 2 || pairBD.Count != 2 || pairEG.Count != 2) throw new Exception("Could not find all wire pairs.");
+            if (pairCF == null || pairBD == null | pairEG == null)
+                throw new Exception("Could not find all pairs");
+            
+            // possibleLinks no longer needed past this point, we only need the pairs to solve
+            possibleLinks.Clear();
 
-            // TODO possibleLinks no longer needed past here
 
-            // Find sigits 0, 6, and 9
+            // Find digits 0, 6, and 9
             Wires[] digitSet069 = input.Where(x => x.Count == 6).ToArray();
 
             // For pair BD, the wire that's missing from this group corresponds to output 'd'
-            List<char> possibleBD = new() { pairBD[0].Key, pairBD[1].Key };
-            bool foundBD = false;
-            foreach(Wires wire in digitSet069) {
-                if (!wire.Contains(possibleBD[0])){
-                    links.Linker[possibleBD[0]] = 'd';
-                    links.Linker[possibleBD[1]] = 'b';
-                    foundBD = true;
-                    break;
-                }else if (!wire.Contains(possibleBD[1])) {
-                    links.Linker[possibleBD[1]] = 'd';
-                    links.Linker[possibleBD[0]] = 'b';
-                    foundBD = true;
-                    break;
-                }
+            if (!SolvePair(digitSet069, pairBD[0], pairBD[1], 'd', 'b', links)) {
+                throw new Exception("Could not find BD");
             }
-            if (foundBD == false) throw new Exception("Could not find BD");
 
 
             // Same thing, but for the EG pair corresponding to 'e'
-            List<char> possibleEG = new() { pairEG[0].Key, pairEG[1].Key };
-            bool foundEG = false;
-            foreach (Wires wire in digitSet069) {
-                if (!wire.Contains(possibleEG[0])) {
-                    links.Linker[possibleEG[0]] = 'e';
-                    links.Linker[possibleEG[1]] = 'g';
-                    foundEG = true;
-                    break;
-                } else if (!wire.Contains(possibleEG[1])) {
-                    links.Linker[possibleEG[1]] = 'e';
-                    links.Linker[possibleEG[0]] = 'g';
-                    foundEG = true;
-                    break;
-                }
+            if (!SolvePair(digitSet069, pairEG[0], pairEG[1], 'e', 'g', links)) {
+                throw new Exception("Could not find EG");
             }
-            if (foundEG == false) throw new Exception("Could not find EG");
 
 
             // Same thing, but for the CF pair corresponding to 'c'
-            List<char> possibleCF = new() { pairCF[0].Key, pairCF[1].Key };
-            bool foundCF = false;
-            foreach (Wires wire in digitSet069) {
-                if (!wire.Contains(possibleCF[0])) {
-                    links.Linker[possibleCF[0]] = 'c';
-                    links.Linker[possibleCF[1]] = 'f';
-                    foundCF = true;
-                    break;
-                } else if (!wire.Contains(possibleCF[1])) {
-                    links.Linker[possibleCF[1]] = 'c';
-                    links.Linker[possibleCF[0]] = 'f';
-                    foundCF = true;
-                    break;
-                }
+            if (!SolvePair(digitSet069, pairCF[0], pairCF[1], 'c', 'f', links)) {
+                throw new Exception("Could not find CF");
             }
-            if (foundCF == false) throw new Exception("Could not find CF");
 
             // One final sanity check
             for(char c = 'a'; c <= 'g'; c++) {
@@ -190,12 +173,30 @@ namespace Day_08 {
             return links;
         }
 
-        private static bool PairMatch(List<char> pair1, List<char> pair2) {
-            if(pair1[0] == pair2[0]) {
-                return pair1[1] == pair2[1];
-            } else {
-                return pair1[0] == pair2[1] && pair1[1] == pair2[0];
+        /// <summary>
+        /// The to keys, key1 and key2, are a "pair" because they could both be the same 2 segments (e.x. segment 'c' and segment 'f')
+        /// Whichever key is missing from one of the numbers (0, 6, 9) is linked to the "missingLink", and the other key gets linked to "link2"
+        /// </summary>
+        /// <param name="digitSet069">The wires for numbers 0, 6, and 9, found by the length of their input.</param>
+        /// <param name="key1">One of the keys in the pair</param>
+        /// <param name="key2">The other key in the pair</param>
+        /// <param name="missingLink">The segment that gets linked to the key that is missing</param>
+        /// <param name="link2">The segment that gets linked to the other key</param>
+        /// <param name="links"></param>
+        /// <returns></returns>
+        private static bool SolvePair(Wires[] digitSet069, char key1, char key2, char missingLink, char link2, WireLinks links) {
+            foreach (Wires wire in digitSet069) {
+                if (!wire.Contains(key1)) {
+                    links.Linker[key1] = missingLink;
+                    links.Linker[key2] = link2;
+                    return true;
+                } else if (!wire.Contains(key2)) {
+                    links.Linker[key2] = missingLink;
+                    links.Linker[key1] = link2;
+                    return true;
+                }
             }
+            return false;
         }
 
         // if we know that wire 'a' is a part of the number '1', remove any other connections that aren't apart of '1'
@@ -207,6 +208,7 @@ namespace Day_08 {
 
         // Yay, you found that "input" matched to "output"!
         // Now we can remove that wire from all the other possible links
+        // I literally made a function just to remove 'a' from all other links lol
         private static void CompleteLink(Dictionary<char, List<char>> links, char input, char output) {
             links[input] = new() { output };
             foreach (var pair in links) {
@@ -214,6 +216,29 @@ namespace Day_08 {
                     pair.Value.Remove(output);
                 }
             }
+        }
+
+        // A "pair" of wires is two wires that have exactly 2 possible segments, and the 2 wires share the same 2 possible segments
+        // Pair CF: Two wires that could be either 'c' or 'f'
+        // Pair BD: Two wires that could be either 'b' or 'd'
+        // Pair EG: Two wires that could be either 'e' or 'g'
+        // We just need to ignore characters from the other known pairs when looking for a particular pair.
+        private static List<char> FindPair(Dictionary<char, List<char>> possibleLinks, char segment1, char segment2) {
+            List<char> pairs = new();
+
+            foreach (var pair in possibleLinks) {
+                List<char> segments = new List<char>(pair.Value);
+
+                if (segments.Count == 2) {
+                    if ((segments[0] == segment1 && segments[1] == segment2)
+                        || (segments[1] == segment1 && segments[0] == segment2)
+                    ) {
+                        pairs.Add(pair.Key);
+                    }
+                }
+            }
+
+            return pairs;
         }
 
     }
