@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Day_08 {
-    internal class Program : ProgramStructure<IEnumerable<Tuple<InputData, OutputData>>> {
+    internal class Program : ProgramStructure<IEnumerable<Tuple<Wires[], Wires[]>>> {
 
         Program() : base(new Parser()
             .Filter(new LineReader())
@@ -18,35 +18,30 @@ namespace Day_08 {
                     new Parser<string[]>() // Parse input data
                     .Parse(x => x[0])
                     .Filter(new SeparatedParser()) // split string into the individual inputs
-                    .Create<InputData>()
+                    .FilterCreate<Wires>()
+                    .ToArray()
                     ,
                     new Parser<string[]>() // Parse output data
                     .Parse(x =>x [1])
                     .Filter(new SeparatedParser()) // Split string into the individual outputs
-                    .Create<OutputData>()
+                    .FilterCreate<Wires>()
+                    .ToArray()
                 )
             )
         ) { }
 
         static void Main(string[] args) {
             new Program().Run(args);
+            //new Program().Run(args, "Example.txt");
+            //new Program().Run(args, "LargeExample.txt");
         }
 
-        Dictionary<int, int[]> possibleNumbersFromLength = new() {
-            { 2, new int[] { 1 } },
-            { 3, new int[] { 7 } },
-            { 4, new int[] { 4 } },
-            { 5, new int[] { 2, 3, 5 } },
-            { 6, new int[] { 0, 6, 9 } },
-            { 7, new int[] { 8 } }
-        };
-
-        protected override object SolvePart1(IEnumerable<Tuple<InputData, OutputData>> data) {
+        protected override object SolvePart1(IEnumerable<Tuple<Wires[], Wires[]>> data) {
             // First look for the easy numbers, 1, 4, 7, 8
             int easyDigitCount = 0;
             foreach (var line in data) {
-                foreach (string output in line.Item2) {
-                    if (possibleNumbersFromLength[output.Length].Length == 1) {
+                foreach (Wires output in line.Item2) {
+                    if (WireLinks.PossibleNumbersFromLength[output.Count].Length == 1) {
                         easyDigitCount++;
                     }
                 }
@@ -55,10 +50,26 @@ namespace Day_08 {
             return easyDigitCount;
         }
 
-        protected override object SolvePart2(IEnumerable<Tuple<InputData, OutputData>> data) {
+        protected override object SolvePart2(IEnumerable<Tuple<Wires[], Wires[]>> data) {
+            int total = 0;
+            foreach(var line in data) {
+                // Solve for the wire links
+                WireLinks links = WireLinks.Solve(line.Item1);
+                
+                // Calculate what the output value is
+                int outputValue = 0;
+                foreach(Wires outputDigit in line.Item2) { // Should be most significate sigit first
+                    Wires unscrambled = links.Unscramble(outputDigit);
+                    int digit = Segment.Decode(unscrambled);
+                    outputValue *= 10;
+                    outputValue += digit;
+                }
 
+                // Add the value to our puzzle answer
+                total += outputValue;
+            }
             
-            return null;
+            return total;
         }
 
     }

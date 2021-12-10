@@ -7,6 +7,34 @@ using System.Threading.Tasks;
 namespace Day_08 {
     public static class Segment {
 
+        // Mostly used for finding wire links
+        public static Dictionary<int, IEnumerable<char>> Segments = new() {
+            { 0, "abcefg" },
+            { 1, "cf" },
+            { 2, "acdeg" },
+            { 3, "acdfg" },
+            { 4, "bcdf" },
+            { 5, "abdfg" },
+            { 6, "abdefg" },
+            { 7, "acf" },
+            { 8, "abcdefg" },
+            { 9, "abcdfg" }
+        };
+
+        // Mostly used for finding wire links
+        public static Dictionary<int, IEnumerable<char>> InverseSegments = new() {
+            { 0, "d" },
+            { 1, "abdeg" },
+            { 2, "bf" },
+            { 3, "be" },
+            { 4, "aeg" },
+            { 5, "ce" },
+            { 6, "c" },
+            { 7, "bdeg" },
+            { 8, "" },
+            { 9, "e" }
+        };
+
         // A is left most bit, g is right most bit, so
         // 0b1100000 means A=1, B=1, rest are 0
         private static Dictionary<int, int> decoder = new() {
@@ -27,7 +55,7 @@ namespace Day_08 {
             if (decoder.TryGetValue(inputs, out output)) {
                 return output;
             } else {
-                return -1;
+                throw new Exception("Not a valid sigit.");
             }
         }
 
@@ -54,6 +82,10 @@ namespace Day_08 {
 
         public static int Decode(bool A, bool B, bool C, bool D, bool E, bool F, bool G) {
             return Decode(new bool[] { A, B, C, D, E, F, G });
+        }
+
+        public static int Decode(Wires wires) {
+            return Decode(wires.AsInt());
         }
 
     }
