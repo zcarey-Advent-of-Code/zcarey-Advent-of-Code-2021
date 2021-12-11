@@ -21,6 +21,7 @@ namespace Day_09 {
 
         static void Main(string[] args) {
             new Program().Run(args);
+            //new Program().Run(args, "Example.txt");
         }
 
         protected override object SolvePart1(int[][] input) {
@@ -30,7 +31,45 @@ namespace Day_09 {
         }
 
         protected override object SolvePart2(int[][] input) {
-            return null;
+            List<Basin> basins = new();
+            Basin[][] basinMap = new Basin[input.Length][];
+            for(int y = 0; y < input.Length; y++) {
+                basinMap[y] = new Basin[input[y].Length];
+            }
+
+            // Let's find those basins!
+            for(int y = 0; y < input.Length; y++) {
+                for(int x = 0; x < input[y].Length; x++) {
+                    int height = input[y][x];
+                    if (height < 9) {
+                        // We are in a basin! Can we find an existing basin?
+                        Basin basin = null;
+                        if(y >= 1 && basinMap[y - 1][x] != null) {
+                            basin = basinMap[y - 1][x];
+                        }
+                        if(x >= 1 && basinMap[y][x - 1] != null) {
+                            if (basin != null && basin != basinMap[y][x - 1]) {
+                                // We need to combine the basins into one.
+                                basin = CombineBasins(basin, basinMap[y][x - 1], basinMap, basins);
+                            } else {
+                                basin = basinMap[y][x - 1];
+                            }
+                        }
+                        
+                        if(basin == null){
+                            // I guess we have to start a new basin
+                            basin = new Basin();
+                            basins.Add(basin);
+                        }
+
+                        //Increase the size of the found basin and add it to the map
+                        basin.Size++;
+                        basinMap[y][x] = basin;
+                    }
+                }
+            }
+            
+            return basins.OrderByDescending(x => x.Size).Take(3).Select(x => x.Size).Aggregate((x, y) => x * y);
         }
 
         private static IEnumerable<int> FindLowPoints(int[][] map) {
@@ -49,6 +88,26 @@ namespace Day_09 {
                     }
                 }
             }
+        }
+
+        private static Basin CombineBasins(Basin basin1, Basin basin2, Basin[][] basinMap, List<Basin> basins) {
+            Basin newBasin = new Basin();
+            newBasin.Size = basin1.Size + basin2.Size;
+            basins.Add(newBasin);
+
+            basins.Remove(basin1);
+            basins.Remove(basin2);
+
+            for(int y = 0; y < basinMap.Length; y++) {
+                for(int x = 0; x < basinMap[y].Length; x++) {
+                    Basin basin = basinMap[y][x];
+                    if(basin == basin1 || basin == basin2) {
+                        basinMap[y][x] = newBasin;
+                    }
+                }
+            }
+
+            return newBasin;
         }
 
     }
