@@ -33,7 +33,16 @@ namespace Day_11 {
         }
 
         protected override object SolvePart2(int[][] map) {
-            return null;
+            int squidCount = map.Length * map[0].Length;
+
+            for(int step = 1; step < int.MaxValue; step++) { //i.e. infinite loop that increments step for us
+                int flashes = Simulate(map);
+                if(flashes == squidCount) {
+                    return step;
+                }
+            }
+
+            throw new OverflowException();
         }
 
         private int Simulate(int[][] map) {
