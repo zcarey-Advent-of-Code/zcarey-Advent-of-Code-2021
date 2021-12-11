@@ -47,5 +47,11 @@ namespace AdventOfCode.Parsing {
 			}
 		}
 
+		public static ParserFilter<TInput, T> ForEach<TInput, TOutput, T>(this IParser<TInput, TOutput> source) where TOutput : IEnumerable<T> {
+			return source.Filter(
+				(TOutput input) => input
+			);
+        }
+
 	}
 }
