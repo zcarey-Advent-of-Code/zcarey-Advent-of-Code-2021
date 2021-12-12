@@ -26,8 +26,15 @@ namespace Day_12 {
             }
         }
 
-        public Cave(bool IsBig) {
+        public Cave(bool IsBig, string? debug = null) {
             IsBigCave = IsBig;
+            Debug = debug;
+        }
+
+        public readonly string? Debug;
+
+        public override string ToString() {
+            return Debug;
         }
 
     }

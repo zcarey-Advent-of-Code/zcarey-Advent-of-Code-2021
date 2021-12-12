@@ -29,7 +29,7 @@ namespace Day_12 {
         }
 
         protected override object SolvePart2(Graph input) {
-            return null;
+            return FindPaths2(input.StartNode, input.EndNode);
         }
 
         public int FindPaths(Cave searchCave, Cave targetCave) {
@@ -45,6 +45,29 @@ namespace Day_12 {
                 }
             }
             searchCave.Traversed = false;
+
+            return totalPaths;
+        }
+
+        public int FindPaths2(Cave startCave, Cave endCave) {
+            return FindPaths2(startCave, endCave, startCave, false, true);
+        }
+
+        public int FindPaths2(Cave searchCave, Cave targetCave, Cave ignoreCave, bool visitedTwice, bool markAsTraversed) {
+            if (searchCave == targetCave) return 1; // We found a path!
+
+            int totalPaths = 0;
+            if (markAsTraversed) searchCave.Traversed = true;
+            {
+                foreach (Cave cave in searchCave.Connections.Where(x => x != ignoreCave)) {
+                    if (!cave.Traversed) {
+                        totalPaths += FindPaths2(cave, targetCave, ignoreCave, visitedTwice, true);
+                    } else if (cave.Traversed && !visitedTwice) {
+                        totalPaths += FindPaths2(cave, targetCave, ignoreCave, true, false);
+                    }
+                }
+            }
+            if (markAsTraversed) searchCave.Traversed = false;
 
             return totalPaths;
         }

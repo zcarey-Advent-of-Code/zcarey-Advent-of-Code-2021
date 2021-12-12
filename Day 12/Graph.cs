@@ -10,8 +10,8 @@ namespace Day_12 {
 
         public List<Cave> Nodes = new();
 
-        public Cave StartNode = new(false);
-        public Cave EndNode = new(false);
+        public Cave StartNode = new(false, "start");
+        public Cave EndNode = new(false, "end");
 
         public void Parse(IEnumerable<Tuple<string, string>> input) {
             Dictionary<string, Cave> nodes = new() {
@@ -21,10 +21,10 @@ namespace Day_12 {
             
             foreach(var connection in input) {
                 if (!nodes.ContainsKey(connection.Item1)) {
-                    nodes[connection.Item1] = new Cave(char.IsUpper(connection.Item1[0]));
+                    nodes[connection.Item1] = new Cave(char.IsUpper(connection.Item1[0]), connection.Item1);
                 }
                 if (!nodes.ContainsKey(connection.Item2)) {
-                    nodes[connection.Item2] = new Cave(char.IsUpper(connection.Item2[0]));
+                    nodes[connection.Item2] = new Cave(char.IsUpper(connection.Item2[0]), connection.Item2);
                 }
 
                 Cave cave1 = nodes[connection.Item1];
