@@ -66,10 +66,36 @@ namespace Day_13 {
         }
 
         protected override object SolvePart2(FoldInstructions input) {
-            return null;
+            HashSet<Point> paper = new();
+            foreach (Point dot in input.Dots) {
+                paper.Add(dot);
+            }
+
+            foreach (Fold fold in input.Folds) {
+                if (fold.FoldX)
+                    FoldX(paper, fold.Position);
+                else
+                    FoldY(paper, fold.Position);
+            }
+
+            // Print out the points
+            Size size = GetBounds(paper);
+            bool[,] output = new bool[size.Width + 1, size.Height + 1];
+            foreach (Point dot in paper) {
+                output[dot.X, dot.Y] = true;
+            }
+            for(int y = 0; y <= size.Height; y++) {
+                for(int x = 0; x <= size.Width; x++) {
+                    Console.Write(output[x, y] ? '#' : '.');
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+
+            return paper.Count;
         }
 
-        private void FoldX(HashSet<Point> paper, int x) {
+        private static void FoldX(HashSet<Point> paper, int x) {
             List<Point> dots = paper.Where(p => p.X >= x).ToList();
             // Remove these points from the paper then add them back in their folded position
             foreach (Point p in dots) {
@@ -79,7 +105,7 @@ namespace Day_13 {
             }
         }
 
-        private void FoldY(HashSet<Point> paper, int y) {
+        private static void FoldY(HashSet<Point> paper, int y) {
             List<Point> dots = paper.Where(p => p.Y >= y).ToList();
             // Remove these points from the paper then add them back in their folded position
             foreach (Point p in dots) {
@@ -87,6 +113,18 @@ namespace Day_13 {
                 int distFromFold = p.Y - y;
                 paper.Add(new Point(p.X, y - distFromFold));
             }
+        }
+
+        private static Size GetBounds(HashSet<Point> paper) {
+            int boundsX = 0;
+            int boundsY = 0;
+
+            foreach (Point p in paper) {
+                boundsX = Math.Max(boundsX, p.X);
+                boundsY = Math.Max(boundsY, p.Y);
+            }
+
+            return new Size(boundsX, boundsY);
         }
 
     }
