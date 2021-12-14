@@ -19,10 +19,10 @@ namespace Day_14 {
             Rule = input[0];
         }
 
-        public bool Match(LinkedListNode<PolymerElement> node) {
+        public bool Match(LinkedListNode<char> node) {
             if (node.Next == null) return false;
 
-            return node.Value.Element == Rule[0] && node.Next.Value.Element == Rule[1];
+            return node.Value == Rule[0] && node.Next.Value == Rule[1];
         }
     }
 }
