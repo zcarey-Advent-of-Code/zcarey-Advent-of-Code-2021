@@ -11,18 +11,19 @@ namespace Day_14 {
         public char InsertionElement { get; private set; }
         public string Rule { get; private set; }
 
+        public string Pair1 { get; private set; }
+        public string Pair2 { get; private set; }
+
         public void Parse(string[] input) {
             if (input[1].Length != 1) throw new ArgumentException("Insertion element must be 1 char");
             InsertionElement = input[1][0];
 
             if (input[0].Length != 2) throw new ArgumentException("Rule must be 2 chars");
             Rule = input[0];
+
+            Pair1 = Rule[0] + "" + InsertionElement;
+            Pair2 = InsertionElement + "" + Rule[1];
         }
 
-        public bool Match(LinkedListNode<char> node) {
-            if (node.Next == null) return false;
-
-            return node.Value == Rule[0] && node.Next.Value == Rule[1];
-        }
     }
 }
