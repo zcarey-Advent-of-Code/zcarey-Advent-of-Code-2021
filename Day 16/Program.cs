@@ -27,7 +27,33 @@ namespace Day_16 {
         }
 
         protected override object SolvePart2(Packet input) {
-            return null;
+/*            List<string> Examples = new() {
+                "C200B40A82",
+                "04005AC33890",
+                "880086C3E88112",
+                "CE00C43D881120",
+                "D8005AC2A8F0",
+                "F600BC2D8F",
+                "9C005AC2F8F0",
+                "9C0141080250320F1802104A08"
+            };
+
+            foreach(string example in Examples) {
+                BitBlitz bits = new();
+                bits.Parse(
+                    Enumerable.Range(0, example.Length)
+                    .Where(x => x % 2 == 0)
+                    .Select(x => example.Substring(x, 2))
+                    .Select(x => Convert.ToByte(x, 16))
+                );
+
+                Packet packet = new Packet();
+                packet.Parse(bits);
+                Console.WriteLine(packet.CalculateValue());
+            }
+            Console.WriteLine();
+*/
+            return input.CalculateValue();
         }
 
         private static long SumVersionNumbers(Packet packet) {

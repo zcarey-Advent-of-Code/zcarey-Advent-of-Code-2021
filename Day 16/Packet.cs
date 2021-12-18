@@ -65,6 +65,34 @@ namespace Day_16 {
 
             return bitsRead;
         }
+
+        public long CalculateValue() {
+            // Linq is our friend here
+            IEnumerable<long> SubPacketValues = SubPackets.Select(x => x.CalculateValue());
+            switch (this.Type) {
+                case PacketType.Sum:
+                    return SubPacketValues.Sum();
+                case PacketType.Product:
+                    return SubPacketValues.Aggregate((x, y) => x * y);
+                case PacketType.Minimum:
+                    return SubPacketValues.Min();
+                case PacketType.Maximum:
+                    return SubPacketValues.Max();
+                case PacketType.LiteralValue:
+                    return LiteralValue.Value;
+                case PacketType.GreaterThan:
+                    if (SubPackets.Count != 2) throw new Exception("Invalid number of subpackets for operation.");
+                    return (SubPackets[0].CalculateValue() > SubPackets[1].CalculateValue()) ? 1 : 0;
+                case PacketType.LessThan:
+                    if (SubPackets.Count != 2) throw new Exception("Invalid number of subpackets for operation.");
+                    return (SubPackets[0].CalculateValue() < SubPackets[1].CalculateValue()) ? 1 : 0;
+                case PacketType.EqualTo:
+                    if (SubPackets.Count != 2) throw new Exception("Invalid number of subpackets for operation.");
+                    return (SubPackets[0].CalculateValue() == SubPackets[1].CalculateValue()) ? 1 : 0;
+                default:
+                    throw new ArgumentException("Invalid packet type.");
+            }
+        }
     }
 
 }
