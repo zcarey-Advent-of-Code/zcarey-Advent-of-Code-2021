@@ -21,11 +21,17 @@ namespace Day_17 {
             ) // [[257, 287], [-101, -57]]
             .Combine() // 257, 287, -101, -57
             .ToArray()
-            .Parse(x => new Rectangle(x[0], x[1] - x[0], x[2], x[3] - x[2]))
+            .Parse(x => new Rectangle(
+                Math.Min(x[0], x[1]),
+                Math.Max(x[2], x[3]),
+                Math.Abs(x[0] - x[1]),
+                Math.Abs(x[2] - x[3])
+            ))
         ) { }
 
         static void Main(string[] args) {
-            new Program().Run(args);
+            //new Program().Run(args);
+            new Program().Run(args, "Example.txt");
         }
 
         protected override object SolvePart1(Rectangle input) {
@@ -38,31 +44,46 @@ namespace Day_17 {
             // Using quadratic we can find
             // V0x = (-1 + sqrt(8x + 1)) / 2
 
-            // OK, enough math! Lets do the rest with programming because we CAN!
-            int V0x = (-1 + (int)Math.Sqrt(8 * input.Left + 1)) / 2;
-            int t0 = V0x + 1;
-            int topY = int.MinValue;
+            /* int minVelx = (-1 + (int)Math.Sqrt(8 * input.Left + 1)) / 2;
+             int maxVelx = (-1 + (int)Math.Sqrt(8 * input.Right + 1)) / 2;
 
-            for (; true; V0x++) {
-                int x = (V0x * V0x + V0x) / 2;
-                if (x < input.Left) continue;
-                if (x > input.Right) break;
+             // I tried using math but I got too angry so here is my brute force (that still uses math)
+             for (int velx = minVelx; velx <= maxVelx; velx++) {
+                 int t = velx + 1;
+                 int x = (-t * t + 2 * velx * t + t) / 2;
 
-                for (int t = V0x + 1; true; t++) {
-                    // Find the maximum possible y we can get
-                    int V0y = (-1 + (int)Math.Sqrt(8 * input.Top + 1)) / 2;
-                    for(; true; V0y++) {
-                        int y = (-t * t + 2 * V0y * t + t) / 2;
-                        if (y > input.Top) continue;
-                          if (y < input.Bottom) break;
-                        topY = Math.Max(topY, y);
+                 y = -0.5t ^ 2 + V0yt + 1 / 2t
+             }*/
+
+            // I tried using math but I got too angry so here is my brute force (that still uses math)
+            //int vMin = (-1 + sqrt(8 * input.Left))
+            int maxY = int.MinValue;
+            for(int velx = 0; velx < input.Right; velx++) {
+                for(int vely = 0; vely < 500; vely++) {
+                    int x = 0;
+                    int y = 0;
+                    int vx = velx;
+                    int vy = vely;
+                    int localMaxY = int.MinValue;
+                    for(int t = 0; t < 10000; t++) {
+                        x += vx;
+                        y += vy;
+                        vx = Math.Max(0, vx - 1);
+                        vy--;
+
+                        localMaxY = Math.Max(localMaxY, y);
+                        if (input.Contains(new Point(x, y))) {
+                            maxY = Math.Max(maxY, localMaxY);
+                        }
+                        if (y < input.Bottom || x > input.Right) {
+                            break;
+                        }
                     }
                 }
-
             }
 
 
-            return topY;
+            return maxY;
         }
 
         protected override object SolvePart2(Rectangle input) {
