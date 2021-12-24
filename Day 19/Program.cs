@@ -34,77 +34,68 @@ namespace Day_19 {
 
         protected override object SolvePart2(Scanner[] input) {
             HashSet<Scanner> scanners = LocateScanners(input);
-            return scanners.Zip(scanners)
-                .Where(x => x.First != x.Second)
-                .Select(x => (x.First.Location - x.Second.Location).Abs)
+            return scanners.SelectMany(x =>
+                    scanners.Where(y => x != y)
+                    .Select(y => (x.Location - y.Location).Abs.Sum())
+                )
                 .Max();
-                
-            /*return (
-                from sA in scanners
-                from sB in scanners
-                where sA != sB
-                select (sA.Location - sB.Location).Abs.Sum()
-            ).Max();*/
         }
 
-        HashSet<Scanner> LocateScanners(Scanner[] input) {
-            var scanners = new HashSet<Scanner>(input);
-            var locatedScanners = new HashSet<Scanner>();
-            var q = new Queue<Scanner>();
+        private HashSet<Scanner> LocateScanners(Scanner[] input) {
+            HashSet<Scanner> remainingScanners = new(input);
+            HashSet<Scanner> locatedScanners = new();
+            Queue<Scanner> searchQueue = new(); // Located scanners that need to search for neighbors
 
-            // when a scanner is located, it gets into the queue so that we can
-            // explore its neighbours.
+            // Take any scanner as the "root", treating it as the origin
+            // It's all relative anyways
+            Scanner root = remainingScanners.First();
+            locatedScanners.Add(root);
+            searchQueue.Enqueue(root);
+            remainingScanners.Remove(root);
 
-            locatedScanners.Add(scanners.First());
-            q.Enqueue(scanners.First());
-
-            scanners.Remove(scanners.First());
-
-            while (q.Any()) {
-                var scannerA = q.Dequeue();
-                foreach (var scannerB in scanners.ToArray()) {
-                    var maybeLocatedScanner = TryToLocate(scannerA, scannerB);
-                    if (maybeLocatedScanner != null) {
-
-                        locatedScanners.Add(maybeLocatedScanner);
-                        q.Enqueue(maybeLocatedScanner);
-
-                        scanners.Remove(scannerB); // sic! 
+            while (searchQueue.Count > 0) {
+                Scanner source = searchQueue.Dequeue(); // Located scanner that we are using to find another scanner
+                foreach (Scanner scanner in remainingScanners.ToArray()) { // We use ToArray to we can modify the HashSet while iterating
+                    // Try to locate the scanner as a neighbor to the located scanner
+                    Scanner locatedScanner = TryToLocate(source, scanner);
+                    if (locatedScanner != null) {
+                        // Sweet, we found a neighbor!
+                        locatedScanners.Add(locatedScanner);
+                        searchQueue.Enqueue(locatedScanner);
+                        remainingScanners.Remove(scanner);
                     }
                 }
             }
 
             return locatedScanners;
         }
-        Scanner TryToLocate(Scanner scannerA, Scanner scannerB) {
-            var beaconsInA = scannerA.GetGlobalBeacons().ToArray();
 
-            foreach (var (beaconInA, beaconInB) in PotentialMatchingBeacons(scannerA, scannerB)) {
-                // now try to find the orientation for B:
-                var rotatedB = scannerB;
-                for (var rotation = 0; rotation < 24; rotation++, rotatedB = rotatedB.Rotate()) {
-                    // Moving the rotated scanner so that beaconA and beaconB overlaps. Are there 12 matches? 
-                    var beaconInRotatedB = beaconInB.Transform(rotatedB.Location, rotation);
+        private Scanner TryToLocate(Scanner source, Scanner neighbor) {
+            IEnumerable<Point> sourceBeacons = source.GetGlobalBeacons();
 
-                    var locatedB = rotatedB.Translate(beaconInA - beaconInRotatedB);
+            foreach (var (sourceBeacon, neighborBeacon) in PotentialMatchingBeacons(source, neighbor)) {
+                // See if the neighbor can be rotated to match the source
+                Scanner rotatedScanner = neighbor;
+                for (int rotation = 0; rotation < 24; rotation++, rotatedScanner = rotatedScanner.Rotate()) {
+                    // Moving the rotated scanner so that source and neighbor overlaps.
+                    Point rotatedBeacon = neighborBeacon.Transform(rotatedScanner.Location, rotation);
+                    Scanner locatedNeighbor = rotatedScanner.Translate(sourceBeacon - rotatedBeacon);
 
-                    if (locatedB.GetGlobalBeacons().Intersect(beaconsInA).Count() >= 12) {
-                        return locatedB;
+                    // 12 matching beacons means they are neighbors!
+                    if (locatedNeighbor.GetGlobalBeacons().Intersect(sourceBeacons).Count() >= 12) {
+                        return locatedNeighbor;
                     }
                 }
             }
 
-            // no luck
             return null;
         }
 
-        IEnumerable<(Point beaconInA, Point beaconInB)> PotentialMatchingBeacons(Scanner scannerA, Scanner scannerB) {
-            // If we had a matching beaconInA and beaconInB and moved the center
-            // of the scanners to these then we would find at least 12 beacons 
-            // with the same coordinates.
+        IEnumerable<(Point sourceBeacon, Point neighborBeacon)> PotentialMatchingBeacons(Scanner source, Scanner neighbor) {
+            // If we had a maching pair of beacons and move the centers of their respective scanners to this location
+            // (the beacons should have the same global location) thwn there should be at least 12 matching beacons
 
-            // The only problem is that the rotation of scannerB is not fixed yet.
-
+            // The only problem is that the rotation of the neighbor scanner is not fixed yet.
             // We need to make our check invariant to that:
 
             // After the translation, we could form a set from each scanner 
@@ -113,26 +104,20 @@ namespace Day_19 {
 
             IEnumerable<int> absCoordinates(Scanner scanner) => scanner.GetGlobalBeacons().SelectMany(x => x.Abs);
 
-            // This is the same no matter how we rotate scannerB, so the two sets should 
-            // have at least 3 * 12 common values (with multiplicity).
-
-            // 🐦 We can also considerably speed up the search with the pigeonhole principle 
-            // which says that it's enough to take all but 11 beacons from A and B. 
-            // If there is no match amongst those, there cannot be 12 matching pairs:
-            IEnumerable<T> pick<T>(IEnumerable<T> ts) => ts.Take(ts.Count() - 11);
-
-            foreach (var beaconInA in pick(scannerA.GetGlobalBeacons())) {
-                var absA = absCoordinates(
-                    scannerA.Translate(-beaconInA)
+            // This is the same no matter how we rotate the neighbor scanner, so the two sets should 
+            // have at least 3 * 12 common values.
+            foreach (Point sourceBeacon in source.GetGlobalBeacons()) {
+                HashSet<int> absSource = absCoordinates(
+                    source.Translate(-sourceBeacon)
                 ).ToHashSet();
 
-                foreach (var beaconInB in pick(scannerB.GetGlobalBeacons())) {
-                    var absB = absCoordinates(
-                        scannerB.Translate(-beaconInB)
+                foreach (var neighborBeacon in neighbor.GetGlobalBeacons()) {
+                    IEnumerable<int> absNeighbor = absCoordinates(
+                        neighbor.Translate(-neighborBeacon)
                     );
 
-                    if (absB.Count(d => absA.Contains(d)) >= 3 * 12) {
-                        yield return (beaconInA, beaconInB);
+                    if (absNeighbor.Count(d => absSource.Contains(d)) >= 3 * 12) {
+                        yield return (sourceBeacon, neighborBeacon);
                     }
                 }
             }

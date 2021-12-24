@@ -29,7 +29,7 @@ namespace Day_19 {
         }
 
         public Point Transform(Point center, int rotation) {
-            var (x, y, z) = this;
+            var (x, y, z) = (this.X, this.Y, this.Z);
 
             // rotate coordinate system so that x-axis points in the possible 6 directions
             switch (rotation % 6) {

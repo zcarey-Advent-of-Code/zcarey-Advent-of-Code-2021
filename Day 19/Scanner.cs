@@ -28,7 +28,7 @@ namespace Day_19 {
             this.LocalBeacons = input.ToList();
         }
 
-        public Scanner Rotate() => new Scanner(Location, Rotation + 2, LocalBeacons);
+        public Scanner Rotate() => new Scanner(Location, Rotation + 1, LocalBeacons);
         
         public Scanner Translate(Point delta) => new Scanner(Location + delta, Rotation, LocalBeacons);
 
