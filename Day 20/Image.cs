@@ -37,6 +37,7 @@ namespace Day_20 {
             this.DefaultPixel = defaultPixel;
             int dx = -bounds.Left;
             int dy = -bounds.Top;
+            // We are probably adding unecessary processing by converting to an array but it seems to be fast enough
             for (int y = bounds.Top; y <= bounds.Bottom; y++) {
                 for (int x = bounds.Left; x <= bounds.Right; x++) {
                     Point point = new(x, y);

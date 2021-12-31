@@ -41,12 +41,17 @@ namespace Day_20 {
 
         protected override object SolvePart1(Tuple<bool[], Image> input) {
             Image result = input.Item2.Enhance(input.Item1).Enhance(input.Item1);
-            //Console.WriteLine(result);
+            Console.WriteLine(result);
             return result.Where(pixel => pixel == true).Count();
         }
 
         protected override object SolvePart2(Tuple<bool[], Image> input) {
-            return null;
+            Image result = input.Item2;
+            for(int i = 0; i < 50; i++) {
+                result = result.Enhance(input.Item1);
+            }
+            Console.WriteLine(result);
+            return result.Where(pixel => pixel == true).Count();
         }
 
     }
