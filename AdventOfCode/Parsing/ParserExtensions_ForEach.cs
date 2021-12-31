@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace AdventOfCode.Parsing {
@@ -51,6 +52,33 @@ namespace AdventOfCode.Parsing {
 			return source.Filter(
 				(TOutput input) => input
 			);
+        }
+
+		/// <summary>
+		///  Returns each char in the string.
+		/// </summary>
+		public static ParserFilter<TInput, char> ForEach<TInput>(this IParser<TInput, string> source) {
+			return source.Filter(
+				(string input) => (IEnumerable<char>)input
+			);
+		}
+
+		/// <summary>
+		/// Applies a function to every char in the string
+		/// </summary>
+		public static ParserFilter<TInput, T> ForEach<TInput, T>(this IParser<TInput, string> source, Func<char, T> filter) {
+			return source.Filter(
+				(string input) => input.Select(filter)
+			);
+        }
+
+		/// <summary>
+		/// Applies a parser to every char in the string
+		/// </summary>
+		public static ParserFilter<TInput, T> ForEach<TInput, T>(this IParser<TInput, string> source, IParser<char, T> filter) {
+			return source.Filter(
+				(string input) => input.Select(filter.Parse)
+			); ;
         }
 
 	}
