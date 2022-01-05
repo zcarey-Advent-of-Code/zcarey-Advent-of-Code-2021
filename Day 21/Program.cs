@@ -17,8 +17,8 @@ namespace Day_21 {
         ) { }
 
         static void Main(string[] args) {
-            new Program().Run(args);
-            //new Program().Run(args, "Example.txt");
+            //new Program().Run(args);
+            new Program().Run(args, "Example.txt");
         }
 
         protected override object SolvePart1(int[] input) {
@@ -55,14 +55,58 @@ namespace Day_21 {
             }
         }
 
-        protected override object SolvePart2(int[] input) {
-            return null;
-        }
-
         private static int Roll(ref int dice) {
             dice = (dice + 1) % 100;
             return dice + 1; // The variable goes from 0-99, but the dice rolls from 1-100
         }
+
+        protected override object SolvePart2(int[] input) {
+            State start = new(input[0], 0, input[1], 0, false);
+            Dictionary<State, Tuple<long, long>> states = new();
+            Tuple<long, long> wins = GetWins(states, start);
+            return Math.Max(wins.Item1, wins.Item2);
+        }
+
+        private static Tuple<long, long> GetWins(Dictionary<State, Tuple<long, long>> states, State current) {
+            Tuple<long, long> totalWins;
+
+            // Try to find the stored result for this state
+            if (states.TryGetValue(current, out totalWins)) {
+                return totalWins;
+            }
+
+            // Check if this is a winning state
+            if(current.Score1 >= 21) {
+                return new Tuple<long, long>(1, 0);
+            }else if(current.Score2 >= 21) {
+                return new Tuple<long, long>(0, 1);
+            }
+
+            // Since this state hasn't been discoverd yet, find the result
+            long player1Wins = 0;
+            long player2Wins = 0;
+            bool turn = current.Turn;
+            int pos = (turn ? current.Position2 : current.Position1);
+            int score = (turn ? current.Score2 : current.Score1);
+            
+            for(int i = 1; i <= 3; i++) {
+                int newPos = (pos + i) % 10;
+                int newScore = score + (newPos + 1); // NOTE: our board is 0-9, so we add one to get the actual board's 1-10
+                State state = new(
+                    turn ? current.Position1 : newPos,
+                    turn ? current.Score1 : newScore,
+                    turn ? newPos : current.Position2,
+                    turn ? newScore : current.Score2,
+                    !turn
+                );
+                Tuple<long, long> wins = GetWins(states, state);
+                player1Wins += wins.Item1;
+                player2Wins += wins.Item2;
+            }           
+            
+            return new Tuple<long, long>(player1Wins, player2Wins);
+        }
+        
 
     }
 }
